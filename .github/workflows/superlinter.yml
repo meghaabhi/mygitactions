@@ -14,7 +14,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Ensures full history
+          fetch-depth: 0  # Ensures full commit history
           persist-credentials: false
 
       - name: Configure Git
@@ -24,9 +24,9 @@ jobs:
 
       - name: Prevent Workflow Loop
         run: |
-          LAST_COMMITTER=$(git log -1 --pretty=format:'%an')
-          if [[ "$LAST_COMMITTER" == "GitHub Actions" ]]; then
-            echo "Last commit was from GitHub Actions. Exiting..."
+          LAST_COMMIT_MSG=$(git log -1 --pretty=%B)
+          if [[ "$LAST_COMMIT_MSG" == *"[skip ci]"* ]]; then
+            echo "Last commit contains [skip ci]. Exiting..."
             exit 0
           fi
 
@@ -39,8 +39,20 @@ jobs:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           git add .
-          git commit -m "Automated commit from GitHub Actions" || exit 0
-          git push https://x-access-token:${GH_PAT}@github.com/meghaabhi/mygitactions.git HEAD:main
+          git commit -m "Automated commit from GitHub Actions [skip ci]" || exit 0
+          
+          # Create a temporary branch
+          git branch temp-auto
+          git checkout temp-auto
+          git push https://x-access-token:${GH_PAT}@github.com/meghaabhi/mygitactions.git temp-auto
+
+          # Merge back to main without triggering CI
+          git checkout main
+          git merge temp-auto --no-ff -m "Merging automation changes [skip ci]"
+          git push https://x-access-token:${GH_PAT}@github.com/meghaabhi/mygitactions.git main
+          
+          # Delete the temp branch
+          git push https://x-access-token:${GH_PAT}@github.com/meghaabhi/mygitactions.git --delete temp-auto
 
 
 
