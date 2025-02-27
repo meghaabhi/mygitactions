@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:
+  workflow_dispatch:  # Allows manual trigger
 
 jobs:
   automate-git:
@@ -14,12 +14,21 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
         with:
-          persist-credentials: false  # Disable default GitHub authentication
+          fetch-depth: 0  # Ensures full history
+          persist-credentials: false
 
       - name: Configure Git
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
+
+      - name: Prevent Workflow Loop
+        run: |
+          LAST_COMMITTER=$(git log -1 --pretty=format:'%an')
+          if [[ "$LAST_COMMITTER" == "GitHub Actions" ]]; then
+            echo "Last commit was from GitHub Actions. Exiting..."
+            exit 0
+          fi
 
       - name: Make Changes (Optional)
         run: |
@@ -27,10 +36,11 @@ jobs:
 
       - name: Commit & Push Changes
         env:
-          GH_PAT: ${{ secrets.GH_PAT }}  # Using Personal Access Token (PAT)
+          GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           git add .
-          git commit -m "Automated commit from GitHub Actions" || echo "No changes to commit"
+          git commit -m "Automated commit from GitHub Actions" || exit 0
           git push https://x-access-token:${GH_PAT}@github.com/meghaabhi/mygitactions.git HEAD:main
+
 
 
