@@ -22,7 +22,7 @@ jobs:
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
 
-      - name: Prevent Workflow Loop
+      - name: Prevent Workflow Loop 
         run: |
           LAST_COMMIT_MSG=$(git log -1 --pretty=%B)
           if [[ "$LAST_COMMIT_MSG" == *"[skip ci]"* ]]; then
