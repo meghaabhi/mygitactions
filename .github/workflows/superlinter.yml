@@ -1,0 +1,30 @@
+name: super-linter
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Allows manual trigger
+
+jobs:
+  automate-git:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+      - name: Make Changes (Optional)
+        run: |
+          echo "Automated update at $(date)" >> changes.log
+
+      - name: Commit & Push Changes
+        run: |
+          git add .
+          git commit -m "Automated commit from GitHub Actions"
+          git push
