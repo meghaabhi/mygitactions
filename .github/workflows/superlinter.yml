@@ -1,10 +1,10 @@
-name: super-linter
+name: Git Automation
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch: # Allows manual trigger
+  workflow_dispatch:
 
 jobs:
   automate-git:
@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
+        with:
+          persist-credentials: false  # Disable default GitHub authentication
 
       - name: Configure Git
         run: |
@@ -24,7 +26,10 @@ jobs:
           echo "Automated update at $(date)" >> changes.log
 
       - name: Commit & Push Changes
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}  # Use the stored secret
         run: |
           git add .
-          git commit -m "Automated commit from GitHub Actions"
-          git push
+          git commit -m "Automated commit from GitHub Actions" || echo "No changes to commit"
+          git push https://x-access-token:${GH_PAT}@github.com/meghaabhi/meghaabhi/mygitactions.git HEAD:main
+
